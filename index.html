@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+      content="AimForge Training Lab is an aim trainer built with Three.js - flick, switching, and tracking with configurable crosshair, sensitivity, and targets." />
+    <meta name="color-scheme" content="dark" />
+    <title>AimForge Training Lab</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/"
+        }
+      }
+    </script>
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="stylesheet" href="./styles.css" />
+    <base target="_blank">
+  </head>
+
+  <body>
+    <div id="app" class="app" data-bg="deep">
+      <div id="stage" class="stage" aria-label="3D stage"></div>
+      <div id="hud" class="hud hidden" aria-hidden="true">
+        <div id="statsBox" class="statsBox" role="group" aria-label="Performance stats">
+          <div class="statRow">
+            <div class="statLabel" id="statAccuracyLabel">Accuracy</div>
+            <div id="statAccuracy" class="statValue">0%</div>
+          </div>
+          <div class="statRow">
+            <div class="statLabel" id="statResponseLabel">Avg response</div>
+            <div id="statResponse" class="statValue">-</div>
+          </div>
+          <div id="statExtra" class="statRow">
+            <div id="statExtraLabel" class="statLabel">Hits</div>
+            <div id="statExtraValue" class="statValue">0</div>
+          </div>
+        </div>
+        <div class="topCenter">
+          <div id="timerReadout" class="timerReadout">60.0</div>
+        </div>
+
+        <div id="timeBar" class="timeBar" aria-hidden="true">
+          <div id="timeBarFill" class="timeBarFill"></div>
+          <div id="timeBarTick" class="timeBarTick"></div>
+          <div id="timeBarMarker" class="timeBarMarker"></div>
+        </div>
+        <div id="fpsReadout" class="fpsReadout" aria-hidden="true">0 FPS</div>
+        <svg id="crosshair" class="crosshair" viewBox="0 0 100 100" aria-hidden="true">
+          <circle id="chDot" cx="50" cy="50" r="3" />
+          <circle id="chRing" cx="50" cy="50" r="18" fill="none" stroke-width="1" />
+          <line id="chH" x1="30" y1="50" x2="70" y2="50" />
+          <line id="chV" x1="50" y1="30" x2="50" y2="70" />
+        </svg>
+      </div>
+      <div id="menu" class="overlay overlayMenu" role="dialog" aria-label="Main menu">
+        <div class="menuCard">
+          <div class="menuHeader">
+            <div>
+              <div class="brand">AimForge Training Lab</div>
+              <div class="tagline">Open-source FPS aim trainer built with Three.js <br>
+                Features multiple training modes, adjustable FOV and sensitivity, customizable environments, and
+                performance analytics. <br>
+                Designed to enhance your precision and reaction speed across competitive titles like Valorant, CS2,
+                Apex Legends, Rust, etc.
+              </div>
+            </div>
+            <div class="hint">
+              <div class="kbdRow"><span class="kbd">Esc</span> Menu</div>
+              <div class="kbdRow"><span class="kbd">P</span> Pause</div>
+              <div class="kbdRow"><span class="kbd">F</span> Fullscreen</div>
+            </div>
+          </div>
+          <div class="menuBody">
+            <div class="menuCol colModes">
+              <div class="modes">
+                <div class="sectionTitle">Modes</div>
+                <button class="modeBtn selected" data-mode="snap">Snap Tiles</button>
+                <button class="modeBtn" data-mode="cluster">Wall Cluster</button>
+                <button class="modeBtn" data-mode="track">Strafe Trail</button>
+                <div id="modeInfo" class="modeInfo" role="note" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="menuCol colSession">
+              <div class="settingsCompact">
+                <div class="sectionTitle">Session</div>
+                <div class="settingRowCompact">
+                  <label for="timer">Timer</label>
+                  <input id="timer" type="range" min="0" max="180" value="60" />
+                  <div id="timerVal" class="settingVal">60s</div>
+                </div>
+                <div class="settingRowCompact">
+                  <label for="targetSize">Target size</label>
+                  <input id="targetSize" type="range" min="0.25" max="1" step="0.01" value="1" />
+                  <div id="targetSizeVal" class="settingVal">100%</div>
+                </div>
+                <div class="settingRowCompact">
+                  <label for="sensitivity">Sensitivity</label>
+                  <input id="sensitivity" type="range" min="0.2" max="2.5" step="0.01" value="1" />
+                  <div id="sensitivityVal" class="settingVal">1.00x</div>
+                </div>
+                <div class="settingRowCompact">
+                  <label for="fov">FOV</label>
+                  <input id="fov" type="range" min="60" max="120" step="1" value="90" />
+                  <div id="fovVal" class="settingVal">90°</div>
+                </div>
+                <div class="sectionTitle">Target</div>
+                <div class="settingRowCompact">
+                  <label for="targetShape">Shape</label>
+                  <select id="targetShape">
+                    <option value="circle" selected>Circle</option>
+                    <option value="capsule">Capsule</option>
+                    <option value="ball">Ball</option>
+                  </select>
+                  <div class="settingVal"></div>
+                </div>
+                <div class="settingRowCompact colorRow">
+                  <label for="target3DColor">3D Color</label>
+                  <input id="target3DColor" type="color" value="#ffffff" />
+                  <div class="settingVal"></div>
+                </div>
+              </div>
+            </div>
+            <div class="menuCol colCrosshair">
+              <div class="settings">
+                <div class="sectionTitle">Crosshair</div>
+                <div class="settingRow">
+                  <label for="crosshairType">Style</label>
+                  <select id="crosshairType">
+                    <option value="dot" selected>Dot</option>
+                    <option value="cross">Cross</option>
+                    <option value="ring">Ring</option>
+                    <option value="dot+ring">Dot + Ring</option>
+                  </select>
+                  <div class="settingVal"></div>
+                </div>
+                <div class="settingRow">
+                  <label for="crosshairSize">Scale</label>
+                  <input id="crosshairSize" type="range" min="0.6" max="2" step="0.01" value="1" />
+                  <div id="crosshairSizeVal" class="settingVal">1.00x</div>
+                </div>
+                <div class="settingRow">
+                  <label for="crosshairColor">Color</label>
+                  <input id="crosshairColor" type="color" value="#e8f0ff" />
+                  <div class="settingVal"></div>
+                </div>
+                <div class="settingRow">
+                  <label for="crosshairGlow">Glow on target</label>
+                  <select id="crosshairGlow">
+                    <option value="off" selected>Off</option>
+                    <option value="on">On</option>
+                  </select>
+                  <div class="settingVal"></div>
+                </div>
+              </div>
+            </div>
+            <div class="menuCol colEnv">
+              <div class="settings">
+                <div class="sectionTitle">Environment</div>
+                <div class="settingRow">
+                  <label for="bg">Background</label>
+                  <select id="bg">
+                    <option value="deep" selected>Deep</option>
+                    <option value="graphite">Graphite</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="mist">Mist</option>
+                  </select>
+                  <div class="settingVal"></div>
+                </div>
+                <div id="trackSettings" class="trackSettings">
+                  <div class="sectionTitle">Strafe Trail</div>
+                  <div class="settingRow">
+                    <label for="trackInputMode">Input mode</label>
+                    <select id="trackInputMode">
+                      <option value="passive" selected>Passive (recommended)</option>
+                      <option value="hold">Hold Fire</option>
+                    </select>
+                    <div class="settingVal"></div>
+                  </div>
+                  <div class="modeInfoHint" style="margin-top:8px;font-size:11px;">
+                    <span class="modeInfoLabel">Passive:</span> Crosshair on target scores automatically.<br>
+                    <span class="modeInfoLabel">Hold Fire:</span> Hold left click while on target to score.
+                  </div>
+                  <div class="settingRow">
+                    <label for="motionSpeed">Target speed</label>
+                    <input id="motionSpeed" type="range" min="0.4" max="4" step="0.01" value="1.5" />
+                    <div id="motionSpeedVal" class="settingVal">1.50</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="menuFooter">
+            <div id="lastRun" class="lastRun" aria-label="Last session summary"></div>
+            <div class="menuActions">
+              <button id="startBtn" class="primary">Start</button>
+            </div>
+          </div>
+          <div class="menuBottomHint">
+            Tip: click <em>Start</em>, then click once to lock the mouse. Press <span class="kbd">Esc</span> to return.
+          </div>
+        </div>
+      </div>
+      <div id="countdown" class="overlay overlayCenter hidden" aria-hidden="true">
+        <div id="countdownText" class="countdownText">3</div>
+      </div>
+      <div id="pause" class="overlay overlayCenter hidden" aria-hidden="true">
+        <div class="pauseCard">
+          <div class="pauseTitle">Paused</div>
+          <div class="pauseHint">Press <span class="kbd">P</span> to resume</div>
+        </div>
+      </div>
+      <div id="results" class="overlay overlayCenter hidden" aria-hidden="true">
+        <div class="resultsCard">
+          <div class="resultsTitle">Session complete</div>
+          <div id="resultsBody" class="resultsBody"></div>
+          <div class="resultsActions">
+            <button id="restartBtn" class="primary">Restart</button>
+            <button id="backBtn" class="ghost">Back to menu</button>
+          </div>
+        </div>
+      </div>
+      <div id="toast" class="toast hidden" aria-hidden="true"></div>
+    </div>
+    <script type="module" src="./assets/js/main.js"></script>
+  </body>
+
+</html>
