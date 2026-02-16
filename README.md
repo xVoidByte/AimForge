@@ -14,7 +14,8 @@ I am open to implement more features as long as you can give me a video example 
 
 - **Esc**: Return to menu (during a session)
 - **P**: Pause/resume
-- **F**: Fullscreen toggle  
+- **F**: Fullscreen toggle
+
 *Note for Devs: there is a hidden No Clip feature for debugging/testing purposes if you wish to contribute*
 
 ## Requirements
