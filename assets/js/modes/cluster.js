@@ -74,9 +74,17 @@ export class WallClusterMode {
     const maxX = halfW - bounds.halfW - pad;
     const maxY = halfH - bounds.halfH - pad;
 
+    // Floor is at y=0, add extra padding for 3D shapes (ball/capsule)
+    const shape = this.settings.targetShape ?? 'circle';
+    const floorY = 0;
+    const minY = shape === 'ball' || shape === 'capsule' ? floorY + bounds.halfH + 0.3 : cy - maxY;
+
     for (let i = 0; i < 80; i++) {
       const x = (Math.random() * 2 - 1) * maxX;
       const y = cy + (Math.random() * 2 - 1) * maxY;
+
+      // Prevent clipping through floor
+      if (y < minY) continue;
 
       let ok = true;
       for (const p of existing) {
@@ -90,7 +98,9 @@ export class WallClusterMode {
       if (ok) return new THREE.Vector3(x, y, z);
     }
 
-    return new THREE.Vector3((Math.random() * 2 - 1) * maxX, cy + (Math.random() * 2 - 1) * maxY, z);
+    // Fallback with floor constraint
+    const fallbackY = Math.max(minY, cy + (Math.random() * 2 - 1) * maxY);
+    return new THREE.Vector3((Math.random() * 2 - 1) * maxX, fallbackY, z);
   }
 
   _spawnAll() {

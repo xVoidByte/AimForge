@@ -95,10 +95,19 @@ export class StrafeTrailMode {
     const bounds = this._getTargetBounds();
     const pad = 0.2;
 
+    // Floor is at y=0, ensure 3D targets don't clip through
+    const shape = this.settings.targetShape ?? 'circle';
+    const floorY = 0;
+    const floorConstraint = shape === 'ball' || shape === 'capsule' ? floorY + bounds.halfH + 0.3 : -Infinity;
+    const minY = Math.max(floorConstraint, cy - (halfH - bounds.halfH - pad));
+
     // Start in center area
+    let startY = cy + (Math.random() * 2 - 1) * (halfH - bounds.halfH - pad) * 0.5;
+    startY = Math.max(minY, startY);
+
     this.pos.set(
       (Math.random() * 2 - 1) * (halfW - bounds.halfW - pad) * 0.5,
-      cy + (Math.random() * 2 - 1) * (halfH - bounds.halfH - pad) * 0.5,
+      startY,
       (w?.z ?? -12) + 0.02
     );
 
@@ -138,7 +147,12 @@ export class StrafeTrailMode {
     const pad = 0.2;
     const minX = -halfW + bounds.halfW + pad;
     const maxX = halfW - bounds.halfW - pad;
-    const minY = cy - halfH + bounds.halfH + pad;
+
+    // Floor is at y=0, ensure 3D targets don't clip through
+    const shape = this.settings.targetShape ?? 'circle';
+    const floorY = 0;
+    const floorConstraint = shape === 'ball' || shape === 'capsule' ? floorY + bounds.halfH + 0.3 : -Infinity;
+    const minY = Math.max(floorConstraint, cy - halfH + bounds.halfH + pad);
     const maxY = cy + halfH - bounds.halfH - pad;
 
     // Direction changes

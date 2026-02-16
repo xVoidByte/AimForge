@@ -62,7 +62,16 @@ export class SnapTilesMode {
     const pad = 0.5;
     const maxX = halfW - bounds.halfW - pad;
     const maxY = halfH - bounds.halfH - pad;
-    return new THREE.Vector3((Math.random() * 2 - 1) * maxX, cy + (Math.random() * 2 - 1) * maxY, z);
+
+    // Floor is at y=0, add extra padding for 3D shapes (ball/capsule)
+    const shape = this.settings.targetShape ?? 'circle';
+    const floorY = 0;
+    const minY = shape === 'ball' || shape === 'capsule' ? floorY + bounds.halfH + 0.3 : cy - maxY;
+
+    let y = cy + (Math.random() * 2 - 1) * maxY;
+    y = Math.max(minY, y); // Prevent floor clipping
+
+    return new THREE.Vector3((Math.random() * 2 - 1) * maxX, y, z);
   }
 
   _spawnTarget() {
