@@ -2,6 +2,8 @@
 
 AimForge is a web aim trainer designed to improve precision and reaction speed for competitive FPS games like Valorant, CS2, Apex Legends, Rust & more. No downloads/setups required unless you wish to contribute to the project as a developer, just play and practice.
 
+<img width="2559" height="1439" alt="image" src="https://github.com/user-attachments/assets/91f435c2-ac23-462c-83e2-50106ee5dc1a" />
+
 ## Current Features
 
 - *Snap Tiles*: Single target respawns instantly (flick + first-shot precision)
